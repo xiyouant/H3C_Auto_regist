@@ -1,0 +1,627 @@
+
+
+
+<html>
+  <head>
+    <title>iMC Portal</title>
+        <link href="/portal/jscss/login.css" type="text/css" rel="stylesheet" >
+    <link href="/portal/jscss/common_dc.css" type="text/css" rel="stylesheet" >
+    <script src="/portal/jscss/common.js" type="text/javascript" ></script>
+    <script src="/portal/jscss/jquery-1.6.4.js" type="text/javascript" ></script>
+    <script type="text/javascript">
+	    jQuery(document).ready(function() {
+	    	f_init();
+	    	i_p_f_pageLoading("init");
+	    });
+	  </script>
+    <script language="JavaScript">
+	    function f_init() {
+	    	if (imc_portal_function_ifQuickAuth()) {
+		    	$('#id_inputPanel').hide();
+		    	$('#id_quickAuthPanel').show();
+		    	
+	    		f_initForQuickAuthPanel();
+	    	} else {
+		    	$('#id_inputPanel').show();
+		    	$('#id_quickAuthPanel').hide();
+		    	
+	    		f_initForInputPanel();
+		    }
+	
+	    	f_initForPublicElement();
+		}
+
+		function f_initForInputPanel() {
+		  var serviceTypeDes;
+		  if(imc_portal_function_getCookie("hello2") == "true") {
+		      $("#id_isSavePwd").prop("checked", true);
+			  $("#id_userName").val(imc_portal_function_getCookie("hello1"));
+		      $("#id_userPwd").val(imc_portal_function_encrypt(imc_portal_function_getCookie("hello3")));
+		      serviceTypeDes = imc_portal_function_getCookie("hello4");
+		  } else {
+			  $("#id_isSavePwd").prop("checked", false);
+		        $("#id_userName").val("");
+		        $("#id_userPwd").val("");
+		        serviceTypeDes = null;
+		  }
+		    
+		  var imc_portal_var_service_type_options = imc_portal_function_getServiceTypeOptions();
+		  if (imc_portal_var_service_type_options.length > 0) {
+	  	    for (i = 0; i < imc_portal_var_service_type_options.length; i++) {
+	  	    	document.getElementById("id_serviceType").options.add(imc_portal_var_service_type_options[i])
+	        }
+	      }
+
+		  if (serviceTypeDes != null) {
+			  $("#id_serviceType").val(serviceTypeDes);
+		  }
+
+	      /**    */
+	      $("#id_lable_username").html(imc_portal_function_getLableStrForName()); 
+	      $("#id_lable_userpwd").html(imc_portal_function_getLableStrForPwd());
+	      $("#id_lable_servicetype").html(imc_portal_function_getLableStrForSrvType());
+	      $("#id_des_savepwd").html(imc_portal_function_getLableStrForSavepwd());
+	      $("#id_lable_loginbutton_auth").val(imc_portal_function_getLableStrForLoginButton());
+	      $("#id_lable_logoutbutton_auth").val(imc_portal_function_getLableStrForLogoutButton());
+		}
+
+		function f_initForQuickAuthPanel() {
+			$("#id_des_quickAuth").html(imc_portal_function_getDesStrForQuickAuth()); 
+			$("#id_lable_loginbutton_quickauth").val(imc_portal_function_getLableStrForLoginButton());
+		}
+
+		function f_initForPublicElement() {
+		  $("#id_errorMessage").hide();
+		  var v_Language = imc_portal_function_getLanguage();
+		  $("#id_title").html(imc_portal_function_getTitleDesStr());
+	      $("#id_copyright").append(imc_portal_function_getDesStrForCopyright());
+	      $("#id_faq").prop("href", "/portal/faq/portal_faq(" + v_Language +").html");
+	      $("#id_faq").html(imc_portal_function_getLableStrForFAQ());
+
+	      if ($("#id_findPwdUrl") != null && $("#id_findPwdUrl").val() != null) {
+	    	  $("#id_findpwd").show();
+		      $("#id_a_findpwd").prop("href", $("#id_findPwdUrl").val());
+		      $("#id_a_findpwd").html(imc_portal_function_getLableStrForForgotPwd());
+		  } else {
+			  $('#id_findpwd').hide();
+		  }
+
+	      if ($("#id_preRegisteGuestUrl") != null && $("#id_preRegisteGuestUrl").val() != null) {
+	    	  $("#id_applyguest").show();
+		      $("#id_a_applyguest").prop("href", $("#id_preRegisteGuestUrl").val());
+		      $("#id_a_applyguest").html(imc_portal_function_getLableStrForApplyGuest());
+		  } else {
+			  $("#id_applyguest").hide();
+		  }
+		}
+
+		function f_login(){
+			if(!imc_portal_function_ifQuickAuth()){
+				var r = f_preLoginForInputPanel();
+				if (!r) {
+					return false;
+				}
+	    	}
+
+			return f_sendLogin();
+	    }
+
+		function f_preLoginForInputPanel() {
+			// userName
+			var userName;
+			var serviceTypeId = $("#id_serviceType").val();
+			var i = $("#id_userName").val().indexOf('@');
+			if(i > -1) {
+				var v_name = $("#id_userName").val();
+				userName = v_name.substring(0,i).trim() + '@' + v_name.substring(i+1).trim();
+			} else if (serviceTypeId == "") {
+				userName=$("#id_userName").val().trim();
+			} else {
+				userName=$("#id_userName").val().trim() + '@' + serviceTypeId;
+			}
+			// check username
+			if(!imc_portal_function_checkUserName(userName, imc_portal_function_getDesStrForPromptArray())){
+				return false;
+			} else {
+				$("#id_userName_").val(userName);
+			}
+			
+			// userPwd
+			var userPwd = $("#id_userPwd").val();
+			if (!imc_portal_function_checkUserPwd(userPwd, imc_portal_function_getDesStrForPwdError())) {
+				return false;
+			} else {
+				$("#id_userPwd_").val(imc_portal_function_base64(userPwd));
+			}
+
+			return true;
+		}
+
+		function f_sendLogin() {
+			var data;
+			$.ajax({
+				url: "/portal/pws?t=li",
+				type: "POST",
+				cache: false,
+				async: true,
+				dataType: "json",
+				data:$("#form1").serializeArray(),
+				beforeSend: function() {
+					i_p_f_pageLoading("start");
+				},
+				success: function(json){
+			    	data = json;
+			    },
+				error: function(x,y,z) {
+			    },
+				complete: function() {
+			    	i_p_f_pageLoading("complete");
+					if (data == null) {
+						alert("error.");
+						return false;
+					} else {
+				    	return f_afterRequestLogin(data);
+				    }
+				}
+			}); 
+		}
+
+		function f_logout(){
+			return f_sendLogout();
+			
+		}
+		function f_sendLogout() {
+			var data;
+			$.ajax({
+				url: "/portal/pws?t=lo",
+				type: "POST",
+				cache: false,
+				async: true,
+				dataType: "json",
+				data:$("#form1").serializeArray(),
+				beforeSend: function() {
+					i_p_f_pageLoading("start");
+				},
+				success: function(json){
+					data = json;
+			    },
+				error: function(x,y,z) {
+				},
+				complete: function() {
+					i_p_f_pageLoading("complete");
+					if (data == null) {
+						alert("error.");
+						return false;
+					} else {
+						return f_afterRequestLogoff(data);
+				    }
+				}
+			}); 
+		}
+
+		function f_afterRequestLogin(json) {
+	  		var v_errorNumber = json.errorNumber; 
+	        if (v_errorNumber != null) {
+	  	  	  if (v_errorNumber == '1') {
+	  	  		f_saveCookie();
+	    		window.location.replace("/portal/page/afterLogin.jsp?pl=" + json.portalLink);
+	    		return true;
+	  	  	  } else {
+		  	  	var v_errorInfo = json[json.e_d];
+	  	  		$("#id_errorMessage").show(); 
+	  	  		if (v_errorInfo != null) {
+	  		  		$("#id_errorMessage").text(v_errorInfo);
+	  		  	} else {
+	  		  		$("#id_errorMessage").text("error.");
+	  			}
+	  	  		return false;
+	  	  	  }
+	        } else {
+	          return false;
+	        }
+		}
+
+		function f_afterRequestLogoff(json){
+			var v_errorNumber = json.errorNumber; 
+	        if (v_errorNumber != null) {
+	  	  	  if (v_errorNumber == '1') {
+	  	  		alert(f_des_logoutsucc(imc_portal_function_getLanguage()));
+	  	  		return true;
+	  	  	  } else {
+		  	  	var v_errorInfo = json[json.e_d];
+	  	  		$("#id_errorMessage").show(); 
+	  	  		if (v_errorInfo != null) {
+	  		  		$("#id_errorMessage").text(v_errorInfo);
+	  		  	} else {
+	  		  		$("#id_errorMessage").text("error.");
+	  			}
+	  	  		$("#id_errorMessage").css("color", "red");
+	  	  		$("#id_errorMessage").css("font-size", "12px");
+	  	  		return false;
+	  	  	  }
+	        } else {
+	        	alert(f_des_logoutfailed(imc_portal_function_getLanguage()));
+	        	return false;
+	        }
+		}
+
+	    function f_saveCookie(){
+	    	imc_portal_function_setCookie("hello1", $("#id_userName").val());
+	    	imc_portal_function_setCookie("hello2", $("#id_isSavePwd").prop("checked"));
+	    	if($("#id_isSavePwd").prop("checked")) {
+	    	    imc_portal_function_setCookie("hello3", imc_portal_function_encrypt($("#id_userPwd").val()));
+	    	    imc_portal_function_setCookie("hello4", $("#id_serviceType").val());	
+	    	} else {
+	    	    imc_portal_function_setCookie("hello3", "");
+	    	    imc_portal_function_setCookie("hello4", "");	
+	    	}
+	    }
+
+	    function f_des_logoutsucc(v_Language){
+    		if (v_Language == "Chinese") {
+    			return $("#id_des_logoutsucc_c").val();
+    		} else {
+    			return $("#id_des_logoutsucc_e").val();
+    		}
+		}
+
+	    function f_des_logoutfailed(v_Language){
+    		if (v_Language == "Chinese") {
+    			return $("#id_des_logoutfailed_c").val();
+    		} else {
+    			return $("#id_des_logoutfailed_e").val();
+    		}
+		}
+    </script>
+  </head>
+  
+  <body leftmargin="0" topmargin="0" >
+    <table cellSpacing=0 cellPadding=0 width="100%" border=0>
+      <tbody>
+        <tr align="center">
+          <td align="center" height=10>&nbsp;</td>
+        </tr>
+        <tr>
+          <td>
+            <table cellSpacing=1 cellPadding=0 width=768 align=center bgColor="#d8e8f8" border=0>
+              <tbody>
+                <tr>
+                  <td id="id_title" class="logo" background="/portal/img/background.jpg" height=50 style="background-position: center right; background-repeat: no-repeat; text-align: center;"></td>
+                </tr>
+                <tr>
+                  <td width="100%" bgColor="#d8e8f8">
+                    <table cellSpacing=0 cellPadding=0 width="98%" align=center border=0>
+                      <tbody>
+                        <tr>
+                          <td width=250 height=30></td>
+                          <td width=250></td>
+                          <td width=251></td>
+                        </tr>
+                        <tr>
+                          <td width=751 colSpan=3>
+                          	<div id="div_001">
+                          	<div id="div_002">
+                            <table cellSpacing=1 cellPadding=0 width=530 align=center bgColor="#5781d5" border=0>
+                              <tbody>
+                                <tr>
+                                  <td height=20>&nbsp;</td>
+                                </tr>
+                                <tr>
+                                  <td bgColor=#f4f4f4 height=100>
+                                    <form name="form1" id="form1" method="post" >
+                                    <p>
+                                    <span id="id_errorMessage" class="errorMesg"></span>
+                                    </p>
+                                    <table id="id_inputPanel" cellSpacing=5 cellPadding=0 width="100%" border=0>
+                                      <tbody>
+                                        <tr>
+                                          <td width="10%" rowSpan="3">&nbsp;</td>
+                                          <td class=boldSize12Font width="25%"><label id="id_lable_username" ></label>(账号使用原红色计费页面账号)</td>
+                                          <td>
+                                          <input type="text" id="id_userName" maxlength="65" class=smallNormalFont style="WIDTH: 100%" >
+                                          <input type="hidden" id="id_userName_" name="userName" >
+                                          </td>
+                                          <td width="10%" rowSpan=3>&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                          <td class=boldSize12Font width="25%"><b style="color:red;"><label id="id_lable_userpwd"></label>(默认:111111)</b></td>
+                                          <td>
+                                          <input type="password" id="id_userPwd" maxlength="32" class=smallNormalFont style="WIDTH: 100%" >
+                                          <input type="hidden" id="id_userPwd_" name="userPwd" >
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td class=boldSize12Font width="25%"><label id="id_lable_servicetype" ></label></td>
+                                          <td>
+                                            <select id="id_serviceType" name="serviceType" size="1" class=smallNormalFont style="WIDTH: 100%" >
+												<option value=""></option>
+                                            </select>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td width="10%">&nbsp;</td>
+                                          <td colspan="2" align="left" class="tBlack14">
+                                            <input type="checkbox" id="id_isSavePwd" name="isSavePwd" ><label id="id_des_savepwd"></label>
+                                          </td>
+                                          <td width="10%">&nbsp;</td>
+                                        </tr>   
+                                        <tr>
+                                          <td colspan="4" align="center">
+                                          	<input id="id_lable_loginbutton_auth" type="button" name="login" value=""  class="button" onclick="f_login()" >
+                                          	<input id="id_lable_logoutbutton_auth" type="button" name="logout" value=""  class="button" onclick="f_logout()" >
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                    <table id="id_quickAuthPanel" cellSpacing=5 cellPadding=0 width="100%" border=0>
+                                      <tbody>
+                                        <tr>
+                  						  <td colspan="4" width="100%" align="center" class="tBlack"><br><label id="id_des_quickAuth"></label></td>
+                  						</tr>
+                  						<tr>
+                                          <td colspan="4" align="center">
+                                          	<input id="id_lable_loginbutton_quickauth" type="button" name="login" value=""  class="button" onclick="f_login()" >
+                                          	<input id="id_lable_logoutbutton_quickauth" type="button" name="logout" value=""  class="button" onclick="f_logout()" >
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                    <p>
+                                     	
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+<script language="JavaScript">
+
+        /**  获取界面描述 -- 界面标题  */
+        function imc_portal_function_getTitleDesStr() {
+            return '欢迎使用iMC Portal'
+        }
+        /**  获取界面描述 -- 用户名框  */
+        function imc_portal_function_getLableStrForName() {
+            return '用户名';
+        }
+        /**  获取界面描述 -- 密码框  */
+        function imc_portal_function_getLableStrForPwd() {
+            return '密码';
+        }
+        /**  获取界面描述 -- 服务类型下拉框  */
+        function imc_portal_function_getLableStrForSrvType() {
+            return '服务类型';
+        }
+        /**  获取界面描述 -- 是否保存密码  */
+        function imc_portal_function_getLableStrForSavepwd() {
+            return '保存密码';
+        }
+		/**  获取界面描述 -- 快速认证  */
+        function imc_portal_function_getDesStrForQuickAuth() {
+            return '单击<上线>按钮即可使用网络服务。';
+        }
+        /**  获取界面描述 -- 上线按钮  */
+        function imc_portal_function_getLableStrForLoginButton() {
+            return '上线';
+        }
+        /**  获取界面描述 -- 下线按钮  */
+        function imc_portal_function_getLableStrForLogoutButton() {
+            return '下线';
+        }
+        /**  获取界面描述 -- FAQ  */
+        function imc_portal_function_getLableStrForFAQ() {
+            return '常见问题解答';
+        }
+        /**  获取界面描述 -- 忘记密码  */
+        function imc_portal_function_getLableStrForForgotPwd() {
+            return '忘记密码';
+        }
+        /**  获取界面描述 -- 申请用户  */
+        function imc_portal_function_getLableStrForApplyGuest() {
+            return '申请用户';
+        }
+        /**  获取iNode DC界面描述 -- 下载iNode DC提供的JRE  */
+        function imc_portal_function_getDesStrForDCDownloadJre() {
+            return '下载并安装JRE';
+        }
+        /**  获取iNode DC界面描述 -- 打开/下载iNode DC的Htm格式帮助文件  */
+        function imc_portal_function_getDesStrForDCHtmHelp(){
+            return '在线查看使用指南';
+        }
+        /**  获取iNode DC界面描述 -- 打开/下载iNode DC的zip格式帮助文件  */
+        function imc_portal_function_getDesStrForDCZipHelp(){
+            return '下载CHM帮助';
+        }
+        /**  获取iNode DC界面描述 -- 打开/下载iNode DC的pdf格式帮助文件  */
+        function imc_portal_function_getDesStrForDCPdfHelp(){
+            return '下载PDF帮助';
+        }
+        /**  获取iNode DC界面描述 -- 加载JNLP时使用的版权信息  */
+        function imc_portal_function_getDesStrForDCVendor(){
+            return 'Hangzhou H3C Technologies Co., Ltd.';
+        }
+        /**  获取iNode DC界面描述 -- 加载JNLP时使用的home page  */
+        function imc_portal_function_getDesStrForDCHomePage(){
+            return 'http://www.h3c.com';
+        }
+        /**  获取界面描述 -- copyright版权信息  */
+        function imc_portal_function_getDesStrForCopyright() {
+            return decodeURIComponent("%E7%89%88%E6%9D%83%E6%89%80%E6%9C%89%20%C2%A9%202007-2012%20%E6%9D%AD%E5%B7%9E%E5%8D%8E%E4%B8%89%E9%80%9A%E4%BF%A1%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8%EF%BC%8C%E4%BF%9D%E7%95%99%E4%B8%80%E5%88%87%E6%9D%83%E5%88%A9%E3%80%82");
+        }
+        /**  获取IT门户统一Portal认证界面描述 -- 仅仅Portal认证  */
+        function imc_portal_function_getLableStrForOnlyPortalAuth() {
+            return '仅Portal认证';
+        }
+        
+		/**  获取界面描述 -- 用户名称校验信息  */
+        function imc_portal_function_getDesStrForPromptArray() {
+	        var imc_portal_var_promptArray = new Array();
+	        imc_portal_var_promptArray[0] = "请输入用户名。"; //account name can not be blank
+	        //User name only have one character '@' at most and the character can not at the beginning of the user name.
+	        imc_portal_var_promptArray[1] = "用户名格式有误，请输入形如name或name@suffix的用户名。";  
+	        //illegal characters(user name, not include the '@' and domain name): #+/?%&=*'@\"[]()<>`	, and please notice that the last char is TAB.
+	        
+	        imc_portal_var_promptArray[2] = "用户名形如name或name@suffix，且不能包含连续的空格。其中name部分不能包括如下特殊字符：{0}和TAB键，suffix部分只能包含[A,Z]∪[a,z]∪[0,9]∪{ -_.}。 arg[0]=#+/?%&=*\u0027@\u005C\u0022[]()<>`";
+
+	        return imc_portal_var_promptArray;
+        }
+
+		/**  获取界面描述 -- 用户密码校验信息  */
+        function imc_portal_function_getDesStrForPwdError() {
+	        var imc_portal_var_errorinfo = "请输入密码。";
+	        return imc_portal_var_errorinfo;
+        }
+
+
+		
+        
+        /** 获取服务类型下拉框的选择项. */
+        function imc_portal_function_getServiceTypeOptions() {
+			
+	        var imc_portal_var_service_type_options = new Array();
+
+			return imc_portal_var_service_type_options;
+        }
+
+		/** 是否快速认证 */
+    	function imc_portal_function_ifQuickAuth() {
+			return false;
+        }
+
+    	/** 是否尝试使用弹出式心跳 */
+        function imc_portal_function_ifTryUsePopupWindow() {
+			return true;
+        }
+
+    	/**  获取语言类型  */
+        function imc_portal_function_getLanguage() {
+			return 'Chinese';
+        }
+
+        /**  IT门户统一认证功能模块: 是否开启了IT门户统一Portal认证的功能  */
+        function imc_portal_function_ifEnablePortalEntrance() {
+			return false;
+        }
+
+        /**  IT门户统一认证功能模块: 是否显示"仅仅portal认证"复现框  */
+        function imc_portal_function_ifShowOnlyPortalAuth() {
+			return false;
+        }
+
+        /**  IT门户统一认证功能模块: 是否选中"仅仅portal认证"复选框 */
+        function imc_portal_function_ifOnlyPortalAuth() {
+			return false;
+        }
+
+
+    </script>
+    
+
+<input type="hidden" name="userurl" value="">
+<input type="hidden" name="userip" value="">
+<input type="hidden" name="basip" value="">						                
+<input type="hidden" name="language" value="Chinese">
+
+
+
+<input type="hidden" name="portalProxyIP" value="222.24.19.190">
+<input type="hidden" name="portalProxyPort" value="50200">
+<input type="hidden" name="dcPwdNeedEncrypt" value="1">
+<input type="hidden" name="assignIpType" value="0">
+<input type="hidden" name="appRootUrl" value="http://222.24.19.190:8080/portal/">
+<input type="hidden" name="manualUrl" value=""> 
+<input type="hidden" name="manualUrlEncryptKey" value="rTCZGLy2wJkfobFEj0JF8A==">
+
+
+
+
+<input type="hidden" id="id_findPwdUrl" value="http://222.24.19.190:8080/selfservice/mail/forgetPassword.jsf?init=true&url=aHR0cDovLzIyMi4yNC4xOS4xOTA6ODA4MC9wb3J0YWwvaW5kZXhfZGVmYXVsdC5qc3A=">
+
+
+
+
+
+
+
+						            </p>
+						            </form>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                            </div><!-- div_002 end -->
+                            <div id="div_003">
+                            <table cellSpacing=1 cellPadding=0 width=530 align=center border=0>
+                            <tr>
+                            <td>
+                            <table><tr><td style="font-size: 12px;font-weight: normal;width:530px;">
+              				  <ou>
+				                <li>
+				                	<a id="id_faq" href=""></a>
+				                </li>    
+				                <!--<li id="id_findpwd">
+				                	<a id="id_a_findpwd" href=""></a>
+				                </li>-->   	
+				                <li id="id_applyguest">
+				                	<a id="id_a_applyguest" href=""></a>
+				                </li>
+								<li>
+				                	更改密码请登录 <a href="http://222.24.19.190:8080/selfservice/login.jsf"> <b>自助服务</b></a>
+				                </li>
+								<li>
+				                	研究生账号已开通，请研究生使用学号和初始默认密码登录并修改密码。
+				                </li>
+				              </ou>
+							</td></tr></table>  
+                            </td></tr></table>
+                            </div><!-- div_003 end -->
+                            </div><!-- div_001 end -->
+                          </td>
+                        </tr>
+
+                        <tr>
+                          <td height="100px"></td>
+                        </tr>
+
+                        <tr>
+                          <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <tr>
+                              <table cellSpacing=0 cellPadding=0 width="90%" align=center border=0>
+                                <tbody>
+                                  <tr>
+                                    <td align="center" class="copyright">
+                                      <div id="id_copyright" align="center"></div>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </tr>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <input type="hidden" id="id_des_logoutsucc_c" value="下线成功。">
+    <input type="hidden" id="id_des_logoutsucc_e" value="Logged out successfully.">
+    <input type="hidden" id="id_des_logoutfailed_c" value="下线失败。">
+    <input type="hidden" id="id_des_logoutfailed_e" value="Failed to log out.">
+  </body>
+</html>
