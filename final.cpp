@@ -254,6 +254,7 @@ int main()
                 while(cheackInert(a))
                 {
                         /*网络断开，重新登陆*/
+                       get_cookies(b,COOK);
                        post_id_key(c,ID,KEY,COOK);
                        cout++;
                        if(cout%10 == 0 )
@@ -265,9 +266,7 @@ int main()
                                time(&rawtime);
                                timeinfo = localtime(&rawtime);
                                
-                               std::ofstream log("regist.log",std::ios::app);
-                               log<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
-                               log.close();
+                               std::cout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
                        }
 
                 }
