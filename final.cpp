@@ -281,6 +281,10 @@ void  run()
 }
 int main()
 {
+        time_t timep;
+        time(&timep);
+        fout<<ctime(&timep)<<" Start Work"<<std::endl;
+
         run();
         return 0;
 }
