@@ -224,9 +224,8 @@ int make_a_heat(char * url)
         }
         
 }
-int main()
+void  run()
 {
-
         CURL * curl;
         CURLcode res;
         int trycount = 0 ;
@@ -257,6 +256,7 @@ int main()
                        get_cookies(b,COOK);
                        post_id_key(c,ID,KEY,COOK);
                        cout++;
+
                        if(cout%10 == 0 )
                        {
                         
@@ -268,11 +268,16 @@ int main()
                                
                                std::cout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
                        }
-
                 }
 
         }
         curl_global_cleanup();
+
+
+}
+int main()
+{
+        run();
 
         return 0;
 }
