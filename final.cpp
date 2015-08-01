@@ -49,7 +49,8 @@ void set_curl_local_port(CURL * curl );
 int post_id_key(char * li, const char * id , const char * key ,const char * cookiesfile);
 int get_cookies(const char * cookies_url,const  char  * cookies_file );
 int  cheackInert(char * url);
-void make_a_heat(char * url);
+int make_a_heat(char * url);
+/* 检查网络，成功返回0,失败返回1*/
 int  cheackInert(char * url)
 {
         FILE * temp;
@@ -87,7 +88,7 @@ int insert_http_head(CURL * curl )
         return 0;
 
 }
-/* get cookies into the file*/
+/* get cookies into the file 成功返回0 ,失败返回1 */
 int get_cookies(const char * cookies_url,const  char  * cookies_file )
 {
         CURL * curl;
@@ -103,30 +104,33 @@ int get_cookies(const char * cookies_url,const  char  * cookies_file )
                 curl_easy_setopt(curl,CURLOPT_WRITEDATA,html_fp);
                 /*put get html file to html_fp */
                 ret = curl_easy_setopt(curl,CURLOPT_COOKIEJAR,cookies_file);
-                if( ret!= CURLE_OK )
-                {
-                        fprintf(stderr, "Curl perform failed: %s\n", curl_easy_strerror(ret));
-                        return 1;
-                }
 
                 ret = curl_easy_perform(curl);
 
                 if( ret!= CURLE_OK )
                 {
                         fprintf(stderr, "Curl perform failed: %s\n", curl_easy_strerror(ret));
+                        curl_easy_cleanup(curl);
                         return 1;
                 }
+                time_t timep;
+                time(&timep);
+                std::cout<<ctime(&timep)<<" GET COOKIES , PUT IT INOT FIFE"<<std::endl;
 
                 curl_easy_cleanup(curl);
                 fclose(html_fp);
+                return 0;
+        }else{
+                time_t timep;
+                time(&timep);
+                std::cout<<ctime(&timep)<<" Init CURL failed"<<std::endl;
+                std::cout<<" GET COOKIES ERROR "<<std::endl;
+                return 1;
+                
         }
-        time_t timep;
-        time(&timep);
-        std::cout<<ctime(&timep)<<" GET COOKIES , PUT IT INOT FIFE"<<std::endl;
-        return 0;
         
 }
-/* 发送key 成功返回1 失败返回0*/
+/* 发送key 成功返回0 失败返回1*/
 int post_id_key(char * li, const char * id , const char * key ,const char * cookiesfile)
 {
         CURL * curl;
@@ -152,14 +156,11 @@ int post_id_key(char * li, const char * id , const char * key ,const char * cook
         {
                 insert_http_head(curl);
                 curl_easy_setopt(curl,CURLOPT_URL,li);
-                //const char* charptr_cookies_start = cookies_start.c_str();
-               // ret = curl_easy_setopt(curl,CURLOPT_COOKIE,charptr_cookies_start);
                
                 curl_easy_setopt(curl,CURLOPT_COOKIEFILE,cookiesfile);
                 /*set cookies */
                 curl_easy_setopt(curl,CURLOPT_WRITEDATA,html_fp);
                 /*drop html*/
-               // curl_easy_setopt(curl,CURLOPT_POSTFIELDSIZE,(long)strlen(target_ptr));
                 curl_easy_setopt(curl,CURLOPT_POSTFIELDS,target_ptr);
                 /*POST*/
                 
@@ -168,14 +169,14 @@ int post_id_key(char * li, const char * id , const char * key ,const char * cook
                 {
                           std::cout<<"curl_easy_perform() fall "<<curl_easy_strerror(ret)<<std::endl;
                           std::cout<<"post failed "<<std::endl;
-                          return 0;
+                          return 1;
                 }
                 fclose(html_fp);
                 curl_easy_cleanup(curl);
                 time_t timep;
                 time(&timep);
                 std::cout<<ctime(&timep)<<"  POST KEY & ID"<<std::endl;
-                return 1;
+                return 0;
                 
         }else{
                 curl_easy_cleanup(curl);
@@ -187,7 +188,8 @@ int post_id_key(char * li, const char * id , const char * key ,const char * cook
         }
 
 }
-void make_a_heat(char * url)
+/* 心跳包 成功返回0 失败返回1 */
+int make_a_heat(char * url)
 {
         CURL * curl;
         curl = curl_easy_init();
@@ -206,16 +208,19 @@ void make_a_heat(char * url)
                 {
                           std::cout<<"curl_easy_perform() fall "<<curl_easy_strerror(ret)<<std::endl;
                           std::cout<<" heat failed "<<std::endl;
-                          exit(0);
+                          return 1;
                 }
                 time_t timep;
                 time(&timep);
                 std::cout<<ctime(&timep)<<"Make A HEAT "<<std::endl;
                 curl_easy_cleanup(curl);
+                return 0;
         }
         else{
                 std::cout<<"curl_easy_init() error "<<std::endl;
                 std::cout<<"heat failed"<<std::endl;
+                curl_easy_cleanup(curl);
+                return 1;
         }
         
 }
