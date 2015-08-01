@@ -30,6 +30,8 @@
 #include<signal.h>
 #include<string.h>
 #include"base64.h"
+std::ofstream fout("regist_log");
+      
 #define DEBUGENDABLDE 1
 #define DEBUG(fmt,...) do {\
         if(DEBUGENDABLDE) \
@@ -67,12 +69,12 @@ int  cheackInert(char * url)
         if( ret != CURLE_OK)
         {
                 time(&timep);
-                std::cout<<ctime(&timep)<<" "<<"Intnet can't be accesed "<<std::endl;
+                fout<<ctime(&timep)<<" "<<"Intnet can't be accesed "<<std::endl;
                 curl_easy_cleanup(curl);
                 return 1;
         }
         time(&timep);
-        std::cout<<ctime(&timep)<<" "<<"Intnet  be accesed "<<std::endl;
+        fout<<ctime(&timep)<<" "<<"Intnet  be accesed "<<std::endl;
 
         curl_easy_cleanup(curl);
         return 0;
@@ -116,7 +118,7 @@ int get_cookies(const char * cookies_url,const  char  * cookies_file )
                 }
                 time_t timep;
                 time(&timep);
-                std::cout<<ctime(&timep)<<" GET COOKIES , PUT IT INOT FIFE"<<std::endl;
+                fout<<ctime(&timep)<<" GET COOKIES , PUT IT INOT FIFE"<<std::endl;
 
                 curl_easy_cleanup(curl);
                 fclose(html_fp);
@@ -124,8 +126,8 @@ int get_cookies(const char * cookies_url,const  char  * cookies_file )
         }else{
                 time_t timep;
                 time(&timep);
-                std::cout<<ctime(&timep)<<" Init CURL failed"<<std::endl;
-                std::cout<<" GET COOKIES ERROR "<<std::endl;
+                fout<<ctime(&timep)<<" Init CURL failed"<<std::endl;
+                fout<<" GET COOKIES ERROR "<<std::endl;
                 return 1;
                 
         }
@@ -168,23 +170,23 @@ int post_id_key(char * li, const char * id , const char * key ,const char * cook
                 ret = curl_easy_perform(curl);
                if( ret!= CURLE_OK )
                 {
-                          std::cout<<"curl_easy_perform() fall "<<curl_easy_strerror(ret)<<std::endl;
-                          std::cout<<"post failed "<<std::endl;
+                          fout<<"curl_easy_perform() fall "<<curl_easy_strerror(ret)<<std::endl;
+                          fout<<"post failed "<<std::endl;
                           return 1;
                 }
                 fclose(html_fp);
                 curl_easy_cleanup(curl);
                 time_t timep;
                 time(&timep);
-                std::cout<<ctime(&timep)<<"  POST KEY & ID"<<std::endl;
+                fout<<ctime(&timep)<<"  POST KEY & ID"<<std::endl;
                 return 0;
                 
         }else{
                 curl_easy_cleanup(curl);
                 time_t timep;
                 time(&timep);
-                std::cout<<"curl_easy_init() fall "<<curl_easy_strerror(ret)<<std::endl;
-                std::cout<<ctime(&timep)<<"post failed "<<std::endl;
+                fout<<"curl_easy_init() fall "<<curl_easy_strerror(ret)<<std::endl;
+                fout<<ctime(&timep)<<"post failed "<<std::endl;
                 return 0;
         }
 
@@ -208,19 +210,19 @@ int make_a_heat(char * url)
                 ret = curl_easy_perform(curl);
                 if(ret != CURLE_OK )
                 {
-                          std::cout<<"curl_easy_perform() fall "<<curl_easy_strerror(ret)<<std::endl;
-                          std::cout<<" heat failed "<<std::endl;
+                          fout<<"curl_easy_perform() fall "<<curl_easy_strerror(ret)<<std::endl;
+                          fout<<" heat failed "<<std::endl;
                           return 1;
                 }
                 time_t timep;
                 time(&timep);
-                std::cout<<ctime(&timep)<<"Make A HEAT "<<std::endl;
+                fout<<ctime(&timep)<<"Make A HEAT "<<std::endl;
                 curl_easy_cleanup(curl);
                 return 0;
         }
         else{
-                std::cout<<"curl_easy_init() error "<<std::endl;
-                std::cout<<"heat failed"<<std::endl;
+                fout<<"curl_easy_init() error "<<std::endl;
+                fout<<"heat failed"<<std::endl;
                 curl_easy_cleanup(curl);
                 return 1;
         }
@@ -268,7 +270,7 @@ void  run()
                                time(&rawtime);
                                timeinfo = localtime(&rawtime);
                                
-                               std::cout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
+                               fout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
                        }
                 }
 
@@ -279,15 +281,6 @@ void  run()
 }
 int main()
 {
-        std::streambuf * backup;//为标准输出做一个备份
-        std::ifstream fout("regist_log");
-        /* 
-        backup = std::cout.rdbuf();//备份
-        std::cout.rdbuf(fin.rdbuf());//设置重定向
-        */
         run();
-       /* 
-        std::cout.rdbuf(backup);//还原
-        */
         return 0;
 }
