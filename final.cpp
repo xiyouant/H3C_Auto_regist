@@ -18,6 +18,7 @@
  * =====================================================================================
  */
 #include<iostream>
+#include<streambuf>
 #include<fstream>
 #include<stdio.h>
 #include<stdlib.h>
@@ -191,6 +192,7 @@ int post_id_key(char * li, const char * id , const char * key ,const char * cook
 /* 心跳包 成功返回0 失败返回1 */
 int make_a_heat(char * url)
 {
+        
         CURL * curl;
         curl = curl_easy_init();
         CURLcode ret;
@@ -277,7 +279,15 @@ void  run()
 }
 int main()
 {
+        std::streambuf * backup;//为标准输出做一个备份
+        std::ifstream fout("regist_log");
+        /* 
+        backup = std::cout.rdbuf();//备份
+        std::cout.rdbuf(fin.rdbuf());//设置重定向
+        */
         run();
-
+       /* 
+        std::cout.rdbuf(backup);//还原
+        */
         return 0;
 }
