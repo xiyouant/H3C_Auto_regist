@@ -69,7 +69,7 @@ int  cheackInert(char * url)
         
         if( ret != CURLE_OK)
         {
-                fout<<"Curl perform failed:"<<curl_easy_strerror(ret)<<std::cout;
+                fout<<"Connetion erorr:"<<curl_easy_strerror(ret)<<std::endl;
                 fclose(temp);
                 curl_easy_cleanup(curl);
                 return 1;
@@ -287,6 +287,8 @@ void  run()
 
                                 fout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
                         }
+
+                        trycount = 0;// 重置闹钟
                 }
                 if( trycount%30 == 0 )
                 {
