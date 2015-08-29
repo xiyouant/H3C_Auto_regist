@@ -59,7 +59,6 @@ int make_a_heat(char * url);
 int  cheackInert(char * url)
 {
         FILE * temp;
-        time_t timep;
         CURLcode ret;
         temp = fopen("film","w");
         CURL * curl;
@@ -70,14 +69,12 @@ int  cheackInert(char * url)
         
         if( ret != CURLE_OK)
         {
-                time(&timep);
-                fout<<ctime(&timep)<<" "<<"Intnet can't be accesed "<<std::endl;
+                fout<<"Curl perform failed:"<<curl_easy_strerror(ret)<<std::cout;
+                fclose(temp);
                 curl_easy_cleanup(curl);
                 return 1;
         }
-        time(&timep);
-        fout<<ctime(&timep)<<" "<<"Intnet  be accesed "<<std::endl;
-
+        fclose(temp);
         curl_easy_cleanup(curl);
         return 0;
 }
@@ -114,8 +111,13 @@ int get_cookies(const char * cookies_url,const  char  * cookies_file )
 
                 if( ret!= CURLE_OK )
                 {
-                        fprintf(stderr, "Curl perform failed: %s\n", curl_easy_strerror(ret));
+                        time_t timep;
+                        time(&timep);
+                        fout<<ctime(&timep);
+                        fout<<"Curl perform failed:"<<curl_easy_strerror(ret)<<std::cout;
+                        fout<<" GET COOKIES ERROR "<<std::endl;
                         curl_easy_cleanup(curl);
+                        fclose(html_fp);
                         return 1;
                 }
                 time_t timep;
@@ -130,6 +132,7 @@ int get_cookies(const char * cookies_url,const  char  * cookies_file )
                 time(&timep);
                 fout<<ctime(&timep)<<" Init CURL failed"<<std::endl;
                 fout<<" GET COOKIES ERROR "<<std::endl;
+                fclose(html_fp);
                 return 1;
                 
         }
@@ -247,33 +250,50 @@ void  run()
         while(1)
         {
                 trycount++;
-                if(trycount==120)
+                if(trycount==300)
                 {
                         make_a_heat(d);
                         /*10分钟一次心跳包*/
                         trycount = 0;
                 }
-                sleep(5);
-                /*等待5s*/
+                sleep(2);
                 int cout=0;
                 while(cheackInert(a))
                 {
                         /*网络断开，重新登陆*/
-                       get_cookies(b,COOK);
-                       post_id_key(c,ID,KEY,COOK);
-                       cout++;
 
-                       if(cout%10 == 0 )
-                       {
-                        
-                               time_t rawtime;
-                               struct tm * timeinfo;
+                        time_t timep;
+                        time(&timep);
+                        fout<<ctime(&timep)<<"Intnet  can't conntecd "<<std::endl;
 
-                               time(&rawtime);
-                               timeinfo = localtime(&rawtime);
-                               
-                               fout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
-                       }
+                        fout<<"为什么 GET cookies 没有运行 "<<std::endl;
+                        fout<<"get_cookies 前一行 "<<std::endl;
+
+                        get_cookies(b,COOK);
+                        fout<<"get_cookies 后一行 post_id_key 前一行"<<std::endl;
+                        post_id_key(c,ID,KEY,COOK);
+
+                        fout<<"post_id_key 后一行"<<std::endl;
+                        cout++;
+
+                        if(cout%10 == 0 )
+                        {
+
+                                time_t rawtime;
+                                struct tm * timeinfo;
+
+                                time(&rawtime);
+                                timeinfo = localtime(&rawtime);
+
+                                fout<<asctime(timeinfo)<<" "<<"多次登陆尝试失败"<<std::endl;
+                        }
+                }
+                if( trycount%30 == 0 )
+                {
+                        time_t timep;
+                        time(&timep);
+                        fout<<ctime(&timep)<<"Intnet conntecd "<<std::endl;
+                        curl_easy_cleanup(curl);
                 }
 
         }
