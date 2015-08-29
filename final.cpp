@@ -259,10 +259,7 @@ void  run()
                 while(cheackInert(a))
                 {
                         /*网络断开，重新登陆*/
-                       fout<<"问题:为什么没有GET COOKIES"<<std::endl;
-                       fout<<"get_cookies 前一行 "<<std::endl;
                        get_cookies(b,COOK);
-                       fout<<"get_cookies 后一行 　post_id_key 前一行"<<std::endl;
                        post_id_key(c,ID,KEY,COOK);
                        cout++;
 
