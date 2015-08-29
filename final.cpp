@@ -23,6 +23,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<map>
+#include<sys/types.h>
+#include<sys/stat.h>
 #include<time.h>
 #include<curl/curl.h>
 #include<unistd.h>
@@ -279,12 +281,45 @@ void  run()
 
 
 }
+/* 设置后台进程
+ * */
+void domain_run( void )
+{
+        int pid;
+        int i;
+
+        if( (pid=fork())>0 )
+        {
+                exit(0);
+        }else if( pid < 0 )
+        {
+                time_t timep;
+                time(&timep);
+                fout<<ctime(&timep)<<" 创建第一子进程失败　"<<std::endl;
+                exit(1);
+        }
+        setsid();//设置第一子进程为会话组长和进程组整
+        if( (pid=fork())>0 ){
+                exit(0);//结束第一子进程
+        }else if( pid < 0){
+                time_t timep;
+                time(&timep);
+                fout<<ctime(&timep)<<" 创建第二子进程失败　"<<std::endl;
+                exit(1);
+        }
+        for(i=0;i<3;i++)
+                close(i);
+        // 关闭打开的文件描述符
+        umask(0);//重设文件创建掩码
+        run();
+
+}
 int main()
 {
         time_t timep;
         time(&timep);
         fout<<ctime(&timep)<<" Start Work"<<std::endl;
 
-        run();
+        domain_run();
         return 0;
 }
