@@ -40,8 +40,8 @@ std::ofstream fout("regist_log");
         fprintf (stderr, fmt, ##__VA_ARGS__); \
 }\
 while (0)
-#define ID "wangluo4"
-#define KEY "h3c654321"
+#define ID "YOUID"
+#define KEY "YOUKEY"
 #define COOK "cookies.txt"
 #define HEATBEATPOSTFIEL "heatbeatpostfile"
 int alarmcount=0;
