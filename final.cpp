@@ -266,14 +266,8 @@ void  run()
                         time(&timep);
                         fout<<ctime(&timep)<<"Intnet  can't conntecd "<<std::endl;
 
-                        fout<<"为什么 GET cookies 没有运行 "<<std::endl;
-                        fout<<"get_cookies 前一行 "<<std::endl;
-
                         get_cookies(b,COOK);
-                        fout<<"get_cookies 后一行 post_id_key 前一行"<<std::endl;
                         post_id_key(c,ID,KEY,COOK);
-
-                        fout<<"post_id_key 后一行"<<std::endl;
                         cout++;
 
                         if(cout%10 == 0 )
@@ -290,7 +284,7 @@ void  run()
 
                         trycount = 0;// 重置闹钟
                 }
-                if( trycount%30 == 0 )
+                if( trycount%60 == 0 )
                 {
                         time_t timep;
                         time(&timep);
