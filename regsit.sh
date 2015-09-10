@@ -5,8 +5,8 @@ curl -c cookie.txt -A "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)" -H "A
 
 ip=$(ifconfig | egrep 'inet addr:222' | cut -d: -f2 | awk '{print $1}')
 #ip=$(ifconfig | egrep '222' | awk '{print $2}')
-user=wangluo3
-pwd=h3c64321
+user=xxxx
+pwd=xxxxxxx
 
 PostData="userName=$user&userPwd=$(echo -n $pwd | base64)&serviceType=&isSavePwd=on&userurl=http%3A%2F%2Fwww.baidu.com&userip=$ip&basip=&language=Chinese&portalProxyIP=222.24.19.190&portalProxyPort=50200&dcPwdNeedEncrypt=1&assignIpType=0&assignIpType=0&appRootUrl=http://222.24.19.190:8080/portal/&manualUrl=&manualUrlEncryptKey=rTCZGLy2wJkfobFEj0JF8A=="
 
